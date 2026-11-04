@@ -47,7 +47,10 @@ Requires pi ≥ 1.4 (virtual models) and a TypeSafe API key in `TYPESAFE_API_KEY
    `~/.pi/agent/pi-jev-router-pro-state.json`; a legacy config that exactly matches a known
    profile is detected automatically.
 3. Keep both installed while verifying. pi warns once per session about duplicate routing
-   surfaces. Remove the legacy duo (`pi uninstall`) only after the smoke checklist is green.
+   surfaces. While the legacy router is installed, the pro extension skips its `jev_route`
+   tool registration (pi fails extension loads on tool-name conflicts) — the tool appears
+   automatically once the legacy duo is removed. Remove the legacy duo (`pi uninstall`)
+   only after the smoke checklist is green.
 4. Legacy commands keep working: `/jev-profile`, `/jev-profiles`, `/jev-profile-add`, … are
    aliases of the `/jev profile …` surface.
 

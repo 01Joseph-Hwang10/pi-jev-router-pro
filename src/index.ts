@@ -601,7 +601,11 @@ export default async function jevRouterProExtension(pi: ExtensionAPI): Promise<v
   registerCommands(pi, commandsContext, { analyse: analysePreview });
 
   // -------------------------------------------------------------- jev_route
-  if (typeof pi.registerTool === "function") {
+  // The legacy pi-jev-model-router registers a tool with the same name; pi
+  // fails the whole extension load on tool-name conflicts (R9.3). While the
+  // legacy duo is installed, pro skips registration so both can coexist
+  // during the migration window; the tool appears once they are removed.
+  if (typeof pi.registerTool === "function" && readLegacyRouterNames().length === 0) {
     pi.registerTool({
       name: "jev_route",
       label: "Jev Route",

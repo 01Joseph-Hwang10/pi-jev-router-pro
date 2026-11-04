@@ -1,6 +1,6 @@
 {
   "name": "pi-jev-router-pro",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Single-surface TypeSafe Jev model router for the Pi coding agent: one virtual model (jev/auto) with judgment routing, mid-turn transient fallback, permanent-failure parking, and first-class routing profiles.",
   "license": "MIT",
