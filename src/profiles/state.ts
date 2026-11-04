@@ -4,7 +4,7 @@ import type { ParkEntry, ProState } from "../domain/types.js";
 import { formatError, isMissingFileError } from "./store.js";
 
 /**
- * Pro extension state file (`pi-jev-router-pro-state.json`,
+ * Pro extension state file (`pi-jev-auto-state.json`,
  * constitution §8). This is the only routing-relevant file the extension
  * writes on its own: active profile name, persisted parking, spend ledger.
  */

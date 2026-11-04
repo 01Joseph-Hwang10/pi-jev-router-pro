@@ -15,9 +15,9 @@ const AGENT_DIR = "agent";
 export const PROFILES_FILE_NAME = "pi-jev-model-router-profiles.json";
 export const LEGACY_ROUTER_CONFIG_FILE_NAME = "pi-jev-model-router.json";
 export const LEGACY_SWITCHER_STATE_FILE_NAME = "pi-jev-model-router-profile-switcher-state.json";
-export const PRO_CONFIG_FILE_NAME = "pi-jev-router-pro.json";
-export const PRO_STATE_FILE_NAME = "pi-jev-router-pro-state.json";
-export const PRO_QUOTA_FILE_NAME = "pi-jev-router-pro-quota.json";
+export const PRO_CONFIG_FILE_NAME = "pi-jev-auto.json";
+export const PRO_STATE_FILE_NAME = "pi-jev-auto-state.json";
+export const PRO_QUOTA_FILE_NAME = "pi-jev-auto-quota.json";
 export const PI_SETTINGS_FILE_NAME = "settings.json";
 
 export function agentDir(): string {

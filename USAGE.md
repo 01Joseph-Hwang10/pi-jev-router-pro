@@ -1,4 +1,4 @@
-# Usage — pi-jev-router-pro
+# Usage — pi-jev-auto
 
 Operational reference: setup, per-command behavior, config knobs, troubleshooting, and the
 live smoke checklist. Conceptual overview lives in [README.md](README.md).
@@ -8,7 +8,7 @@ live smoke checklist. Conceptual overview lives in [README.md](README.md).
 1. **pi ≥ 1.4** (virtual models). Check with `pi --version`.
 2. **TypeSafe credentials**: `TYPESAFE_API_KEY` in your environment or `~/.pi/.env`. Optional
    endpoint override via `TYPESAFE_API_URL` (default `https://api.typesafe.ai/v1/systemone`).
-3. **Install**: `pi install npm:pi-jev-router-pro`.
+3. **Install**: `pi install npm:pi-jev-auto`.
 4. **Select the router**: `/model` → `jev/auto` (levels: low, medium, high, xhigh). It is also
    auto-selected at session start when enabled.
 
@@ -47,7 +47,7 @@ judged tier (`priority` desc) → the tier's chain → adjacent tiers nearest-fi
 ### Switching
 
 `/jev profile switch zai` (or `/jev zai`) swaps the chains **in memory** and writes only the
-active profile name to `pi-jev-router-pro-state.json`. The next request dispatches from the new
+active profile name to `pi-jev-auto-state.json`. The next request dispatches from the new
 profile. No legacy config rewrite, no reload.
 
 ### CRUD
@@ -114,7 +114,7 @@ no caps). Spend is accounted from assistant-message costs into the pro state fil
 `/jev-router mode auto|confirm|notify` overrides per session; `JEV_ROUTER_MODE` / `JEV_ROUTER_OFF=1`
 from the environment.
 
-## Pro knobs (`~/.pi/agent/pi-jev-router-pro.json`)
+## Pro knobs (`~/.pi/agent/pi-jev-auto.json`)
 
 ```jsonc
 {
@@ -135,7 +135,7 @@ implicit `default` import.
 
 | Symptom | Where to look |
 |---|---|
-| `jev-pro: <profile> · dormant` in the footer | A physical model is selected. `/jev auto` re-activates. |
+| `jev-auto: <profile> · dormant` in the footer | A physical model is selected. `/jev auto` re-activates. |
 | No decision entries | The router is dormant, disabled (`/jev-router on`), or `JEV_ROUTER_OFF` is set. |
 | `judgment unavailable (missing API key)` | Set `TYPESAFE_API_KEY`; routing continues sticky. |
 | `not in the catalog — staying put` | The chain names a model this build doesn't list; fix the profile or enable the provider. |

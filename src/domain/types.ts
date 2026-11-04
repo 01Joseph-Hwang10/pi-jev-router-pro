@@ -1,5 +1,5 @@
 /**
- * Domain types for pi-jev-router-pro.
+ * Domain types for pi-jev-auto.
  *
  * Constitution §11: config shapes (`routes`, `kindModels`, tiers
  * `quick|standard|high|premium|xpremium`, `RouteTarget`, `free`, `budget`,
@@ -193,7 +193,7 @@ export interface JevProfile {
 export type ProfilesCollection = Record<string, JevProfile>;
 
 /**
- * Pro-only knobs (design §6 step 3), read from `pi-jev-router-pro.json`.
+ * Pro-only knobs (design §6 step 3), read from `pi-jev-auto.json`.
  * Everything is optional and inert by default.
  */
 export interface ProConfig {

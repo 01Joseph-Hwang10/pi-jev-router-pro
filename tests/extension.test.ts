@@ -96,7 +96,7 @@ describe("extension factory (R1, R2, R8)", () => {
       "utf8",
     );
     // Active profile persisted in the pro state file (R8.2).
-    await writeFile(join(dir, "pi-jev-router-pro-state.json"), JSON.stringify({ version: 1, activeProfile: "zai", parks: [] }), "utf8");
+    await writeFile(join(dir, "pi-jev-auto-state.json"), JSON.stringify({ version: 1, activeProfile: "zai", parks: [] }), "utf8");
   });
 
   afterEach(async () => {

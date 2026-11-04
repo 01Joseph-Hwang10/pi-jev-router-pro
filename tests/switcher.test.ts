@@ -34,7 +34,7 @@ describe("ProRouterRuntime switching (R8.2)", () => {
     dir = await mkdtemp(join(tmpdir(), "switcher-test-"));
     profilesPath = join(dir, "profiles.json");
     legacyPath = join(dir, "pi-jev-model-router.json");
-    statePath = join(dir, "pi-jev-router-pro-state.json");
+    statePath = join(dir, "pi-jev-auto-state.json");
     await writeFile(profilesPath, JSON.stringify(PROFILES, null, 2), "utf8");
   });
 

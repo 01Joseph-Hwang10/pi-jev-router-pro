@@ -8,7 +8,7 @@ import type { StoredJudgment } from "../domain/types.js";
  * summary — expandable to the raw judgment. Durable, never sent to the LLM.
  */
 
-export const ENTRY_TYPE = "jev-pro-decision";
+export const ENTRY_TYPE = "jev-auto-decision";
 
 export type EntryAction = "switched" | "kept" | "notified" | "skipped" | "fallback";
 
@@ -92,11 +92,11 @@ export async function registerEntryRenderer(api: ExtensionAPI): Promise<void> {
       const data = entry.data;
       const box = new Box(1, 1, (text) => theme.bg("customMessageBg", text));
       if (!data) {
-        box.addChild(new Text(theme.fg("dim", "jev-pro: no decision data"), 0, 0));
+        box.addChild(new Text(theme.fg("dim", "jev-auto: no decision data"), 0, 0));
         return box;
       }
       const glyph = GLYPHS[data.action] ?? "·";
-      const label = `${theme.fg("accent", `jev-pro ${glyph} ${data.tier}`)}  ${theme.bold(data.model)}`;
+      const label = `${theme.fg("accent", `jev-auto ${glyph} ${data.tier}`)}  ${theme.bold(data.model)}`;
       box.addChild(new Text(label, 0, 0));
       box.addChild(new Text(theme.fg("dim", data.reason), 0, 0));
       if (data.notes.length > 0) {

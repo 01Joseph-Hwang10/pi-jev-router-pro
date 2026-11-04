@@ -495,7 +495,7 @@ export async function handleProfileInit(_argumentText: string, ctx: ProCommandsC
 
 export function handleProfileHelp(ctx: ProCommandsContext & { command: ExtensionCommandContext }): void {
   const helpText = [
-    "pi-jev-router-pro commands:",
+    "pi-jev-auto commands:",
     "  /jev auto                   - Re-activate routing (select the virtual model)",
     "  /jev profile [name]         - Switch active profile (interactive picker if omitted)",
     "  /jev profile list           - List all profiles and switch interactively",
@@ -667,7 +667,7 @@ function buildStatusPanel(ctx: ProCommandsContext): string {
   const spend = ctx.spend();
   const pick = (chain: Parameters<typeof firstAvailableLite>[1]) => firstAvailableLite(models, chain);
   const lines = [
-    `pi-jev-router-pro status`,
+    `pi-jev-auto status`,
     `enabled: ${ctx.enabled()}${ctx.enabled() ? "" : " (set /jev-router on)"}`,
     `mode: ${ctx.mode()}`,
     `virtual model: ${ctx.virtualModelKey()}${ctx.isDormant() ? " · DORMANT (physical model selected; /jev auto to re-activate)" : ""}`,
