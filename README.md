@@ -1,4 +1,4 @@
-# pi-jev-auto
+# pi-jev-router-pro
 
 Single-surface TypeSafe Jev model router for the [Pi coding agent](https://github.com/earendil-works/pi).
 
@@ -33,7 +33,7 @@ jev/auto:high  →  zai-coding-cn/glm-5.3-flash:medium      (dispatch recorded p
 ## Install
 
 ```bash
-pi install npm:pi-jev-auto
+pi install npm:pi-jev-router-pro
 ```
 
 Requires pi ≥ 1.4 (virtual models) and a TypeSafe API key in `TYPESAFE_API_KEY`
@@ -44,7 +44,7 @@ Requires pi ≥ 1.4 (virtual models) and a TypeSafe API key in `TYPESAFE_API_KEY
 1. Install this package. On first run the legacy `pi-jev-model-router.json` is offered as an
    implicit `default` profile (read-only) — run `/jev profile save default-import` to persist it.
 2. Your profiles file keeps working untouched. The active profile is stored in
-   `~/.pi/agent/pi-jev-auto-state.json`; a legacy config that exactly matches a known
+   `~/.pi/agent/pi-jev-router-pro-state.json`; a legacy config that exactly matches a known
    profile is detected automatically.
 3. Keep both installed while verifying. pi warns once per session about duplicate routing
    surfaces. Remove the legacy duo (`pi uninstall`) only after the smoke checklist is green.
@@ -81,16 +81,16 @@ it dispatches the current model and reports what it would have done. Env knobs
 | File | Purpose |
 |---|---|
 | `~/.pi/agent/pi-jev-model-router-profiles.json` | Profiles (legacy name kept; `JEV_ROUTER_PROFILES` or `profilesPath` overrides). |
-| `~/.pi/agent/pi-jev-auto.json` | Pro knobs: `virtual.{provider,id,name}`, `dormancy`, `profilesPath`, `faultInjection`. |
-| `~/.pi/agent/pi-jev-auto-state.json` | Active profile name, persisted parking, spend ledger. |
-| `~/.pi/agent/pi-jev-auto-quota.json` | Codex quota reading cache. |
+| `~/.pi/agent/pi-jev-router-pro.json` | Pro knobs: `virtual.{provider,id,name}`, `dormancy`, `profilesPath`, `faultInjection`. |
+| `~/.pi/agent/pi-jev-router-pro-state.json` | Active profile name, persisted parking, spend ledger. |
+| `~/.pi/agent/pi-jev-router-pro-quota.json` | Codex quota reading cache. |
 
 The legacy `pi-jev-model-router.json` is **read-only** to this extension.
 
 ## Fault injection (offline fallback verification)
 
 ```jsonc
-// ~/.pi/agent/pi-jev-auto.json
+// ~/.pi/agent/pi-jev-router-pro.json
 {
   "faultInjection": { "firstTransient": "429", "onRequest": 1, "mode": "throw" }
 }

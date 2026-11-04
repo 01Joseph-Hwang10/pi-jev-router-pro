@@ -1,5 +1,5 @@
 {
-  "name": "pi-jev-auto",
+  "name": "pi-jev-router-pro",
   "version": "0.1.0",
   "type": "module",
   "description": "Single-surface TypeSafe Jev model router for the Pi coding agent: one virtual model (jev/auto) with judgment routing, mid-turn transient fallback, permanent-failure parking, and first-class routing profiles.",
@@ -19,12 +19,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/01Joseph-Hwang10/pi-jev-auto.git"
+    "url": "git+https://github.com/01Joseph-Hwang10/pi-jev-router-pro.git"
   },
   "bugs": {
-    "url": "https://github.com/01Joseph-Hwang10/pi-jev-auto/issues"
+    "url": "https://github.com/01Joseph-Hwang10/pi-jev-router-pro/issues"
   },
-  "homepage": "https://github.com/01Joseph-Hwang10/pi-jev-auto#readme",
+  "homepage": "https://github.com/01Joseph-Hwang10/pi-jev-router-pro#readme",
   "files": [
     "src",
     "README.md",

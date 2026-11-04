@@ -3,11 +3,11 @@ import { formatUsd, type SpendSnapshot } from "../routing/budget.js";
 import type { RouteDecision } from "../routing/router.js";
 
 /**
- * Status-bar widget (R8.4): `jev-auto: <profile>` plus the last dispatch.
+ * Status-bar widget (R8.4): `jev-pro: <profile>` plus the last dispatch.
  * Cosmetic and optional; every sink is feature-detected.
  */
 
-export const STATUS_KEY = "jev-auto";
+export const STATUS_KEY = "jev-pro";
 
 export function setStatusText(ctx: ExtensionContext, text: string | undefined): void {
   try {
@@ -18,8 +18,8 @@ export function setStatusText(ctx: ExtensionContext, text: string | undefined): 
 }
 
 export function statusLine(profile: string | undefined, decision: RouteDecision | undefined, spend: SpendSnapshot, dormant: boolean): string {
-  if (dormant) return `jev-auto: ${profile ?? "off"} · dormant`;
-  const parts = [`jev-auto: ${profile ?? "off"}`];
+  if (dormant) return `jev-pro: ${profile ?? "off"} · dormant`;
+  const parts = [`jev-pro: ${profile ?? "off"}`];
   if (decision) parts.push(`${decision.tier} → ${decision.model.provider}/${decision.model.id}`);
   if (spend.today > 0) parts.push(formatUsd(spend.today));
   if (spend.pressure > 0) parts.push(`${Math.round(spend.pressure * 100)}%`);

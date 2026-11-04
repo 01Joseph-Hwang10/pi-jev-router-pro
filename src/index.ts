@@ -19,7 +19,7 @@ import { proConfigPath, proQuotaPath, proStatePath, profilesPath, readLegacyRout
 import { readFile } from "node:fs/promises";
 
 /**
- * pi-jev-auto — single-surface TypeSafe Jev model router (constitution §2).
+ * pi-jev-router-pro — single-surface TypeSafe Jev model router (constitution §2).
  *
  * One virtual model (`jev/auto` by default) routes every request:
  * judgment routing at `user` boundaries, sticky continuations, mid-turn
@@ -163,7 +163,7 @@ export default async function jevRouterProExtension(pi: ExtensionAPI): Promise<v
   } catch (error) {
     // A broken profiles file must not take the session down; defaults apply.
     const message = error instanceof Error ? error.message : String(error);
-    console.warn(`pi-jev-auto: ${message}`);
+    console.warn(`pi-jev-router-pro: ${message}`);
   }
 
   let models: AvailableModel[] = [];
@@ -366,7 +366,7 @@ export default async function jevRouterProExtension(pi: ExtensionAPI): Promise<v
         legacyWarningShown = true;
         notify(
           ctx,
-          `pi-jev-auto: legacy routing extensions also installed (${legacy.join(", ")}). ` +
+          `pi-jev-router-pro: legacy routing extensions also installed (${legacy.join(", ")}). ` +
             "Two routing surfaces may conflict; remove the legacy duo once verification is green.",
           "warning",
         );
@@ -379,12 +379,12 @@ export default async function jevRouterProExtension(pi: ExtensionAPI): Promise<v
     }
 
     if (effectiveEnabled() && !hasApiKey(runtime.config)) {
-      notify(ctx, `pi-jev-auto: no API key. Set ${runtime.config.apiKeyEnv} (or add "apiKey" to the active profile).`, "warning");
+      notify(ctx, `pi-jev-router-pro: no API key. Set ${runtime.config.apiKeyEnv} (or add "apiKey" to the active profile).`, "warning");
     }
     if (effectiveEnabled() && !runtime.config.useDefaultModels) {
       const emptyTiers = TIERS.filter((tier) => tier !== "xpremium" && runtime.config.routes[tier].length === 0);
       if (emptyTiers.length > 0 && !runtime.getActiveProfileName()) {
-        notify(ctx, `pi-jev-auto: useDefaultModels is off with no active profile and no models configured for: ${emptyTiers.join(", ")}.`, "warning");
+        notify(ctx, `pi-jev-router-pro: useDefaultModels is off with no active profile and no models configured for: ${emptyTiers.join(", ")}.`, "warning");
       }
     }
   });
@@ -408,7 +408,7 @@ export default async function jevRouterProExtension(pi: ExtensionAPI): Promise<v
       dormant = true;
       if (!dormantWarned) {
         dormantWarned = true;
-        notify(ctx, `pi-jev-auto: physical model selected (${event.model.provider}/${event.model.id}) — routing is dormant. /jev auto re-activates it.`, "warning");
+        notify(ctx, `pi-jev-router-pro: physical model selected (${event.model.provider}/${event.model.id}) — routing is dormant. /jev auto re-activates it.`, "warning");
       }
     }
     updateStatus(ctx, runtime.getActiveProfileName(), undefined, spendNow(), dormant);
