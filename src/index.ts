@@ -54,6 +54,7 @@ function readProConfig(raw: Record<string, unknown> | undefined): ProConfig {
   }
   if (typeof raw.dormancy === "boolean") cfg.dormancy = raw.dormancy;
   if (typeof raw.profilesPath === "string") cfg.profilesPath = raw.profilesPath;
+  if (typeof raw.detectLegacyProfile === "boolean") cfg.detectLegacyProfile = raw.detectLegacyProfile;
   const fault = asRecord(raw.faultInjection);
   if (fault.firstTransient !== undefined || fault.onRequest !== undefined || fault.mode !== undefined) {
     cfg.faultInjection = {
@@ -173,6 +174,8 @@ export default async function jevRouterProExtension(pi: ExtensionAPI): Promise<v
   let lastDecision: RouteDecision | undefined;
   let quota: CodexQuotaCache | undefined;
   let legacyWarningShown = false;
+  /** R4.4 guard: the current turn exhausted its chain — later retries of the same turn fail visibly instead of silently re-dispatching. */
+  let exhaustedTurn = false;
   /** Fault injection ("throw" mode): the key the armed dispatch would have used. */
   let pendingFaultKey: string | undefined;
   const classifyCache = new Map<string, { analysis: RouteAnalysis; at: number }>();
@@ -473,6 +476,13 @@ export default async function jevRouterProExtension(pi: ExtensionAPI): Promise<v
         pendingFaultKey = undefined;
       }
 
+      // R4.4: once a turn exhausted its chain, further retries of the same
+      // turn keep failing visibly — never a silent re-dispatch of a dead model.
+      if (request.reason === "user") exhaustedTurn = false;
+      if (request.reason === "retry" && !request.failed && exhaustedTurn) {
+        throw new JevChainExhausted((request.state?.attempted as string[] | undefined) ?? [], "chain already exhausted for this turn; no eligible model remains");
+      }
+
       const input: RouteInput = {
         reason: request.reason,
         thinkingLevel: request.thinkingLevel,
@@ -508,9 +518,16 @@ export default async function jevRouterProExtension(pi: ExtensionAPI): Promise<v
         };
       }
 
-      try {
-        const resolved = await resolveRoute(input, env);
-        const model = ctx.modelRegistry.find(resolved.route.provider, resolved.route.id);
+      const resolved = await (async (): Promise<Awaited<ReturnType<typeof resolveRoute>>> => {
+        try {
+          return await resolveRoute(input, env);
+        } catch (error) {
+          // R4.4: mark the turn exhausted so later retries fail visibly.
+          if (error instanceof JevChainExhausted) exhaustedTurn = true;
+          throw error;
+        }
+      })();
+      const model = ctx.modelRegistry.find(resolved.route.provider, resolved.route.id);
         if (!model) {
           // Never invent models (constitution §3): the chain entry is not in
           // this build's catalog, so fall to the sticky target when possible.
@@ -577,10 +594,6 @@ export default async function jevRouterProExtension(pi: ExtensionAPI): Promise<v
         recordDecision(resolved.decision);
         updateStatus(ctx, runtime.getActiveProfileName(), resolved.decision, spendNow(), dormant);
         return { model, thinkingLevel: toThinkingLevel(resolved.route.thinkingLevel, request.thinkingLevel), state: resolved.state };
-      } catch (error) {
-        // R4.4: chain exhaustion throws — the run ends with the error visible.
-        throw error;
-      }
     },
   });
 

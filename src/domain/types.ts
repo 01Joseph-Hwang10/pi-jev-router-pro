@@ -207,6 +207,13 @@ export interface ProConfig {
   /** Where the profiles file lives. Defaults to the legacy profiles file name. */
   profilesPath?: string;
   /**
+  * When false, the extension does not auto-detect the active profile from the
+  * legacy router config (exact match) and does not import it as an implicit
+  * `default` profile — the router starts detached on built-in defaults until
+  * `/jev profile switch` (R9.1 stays available via explicit save commands).
+  */
+  detectLegacyProfile?: boolean;
+  /**
    * Dev-only deterministic fallback verification (design §7). `firstTransient`
    * is the synthetic error text; the first `onRequest` routed dispatches fail
    * with it so the retry-advance path runs against the operator's real second

@@ -179,18 +179,28 @@ describe("extension factory (R1, R2, R8)", () => {
     const definition = pi.virtualModels[0];
     const ctx = stubCtx([{ provider: "zai", id: "glm-5.3" }]);
     const route = definition.route as (request: ModelRouteRequest<unknown>, ctx: ExtensionContext) => Promise<unknown>;
+    const exhaustedRequest = {
+      model: { provider: "jev", id: "auto", api: "pi-virtual" },
+      thinkingLevel: "medium",
+      reason: "retry",
+      failed: { model: { provider: "zai", id: "glm-5.3" }, message: { stopReason: "error", errorMessage: "HTTP 429 rate limited" } },
+      state: { attempted: ["zai/glm-5.3"], lastJudgment: { kind: "chat", kindConfidence: 0.9, complexity: 0.5, budgetIntensity: 0.5, deepReasoning: 0.1 }, lastTier: "standard", lastKind: "chat" },
+      messages: [],
+    } as unknown as ModelRouteRequest<unknown>;
+    await expect(route(exhaustedRequest, ctx)).rejects.toThrow(/chain exhausted/i);
+    // A further retry of the same exhausted turn (no failure details) keeps
+    // failing visibly instead of silently re-dispatching (R4.4 no silent degrade).
     await expect(
       route(
         {
           model: { provider: "jev", id: "auto", api: "pi-virtual" },
           thinkingLevel: "medium",
           reason: "retry",
-          failed: { model: { provider: "zai", id: "glm-5.3" }, message: { stopReason: "error", errorMessage: "HTTP 429 rate limited" } },
-          state: { attempted: ["zai/glm-5.3"], lastJudgment: { kind: "chat", kindConfidence: 0.9, complexity: 0.5, budgetIntensity: 0.5, deepReasoning: 0.1 }, lastTier: "standard", lastKind: "chat" },
+          state: { attempted: ["zai/glm-5.3"] },
           messages: [],
         } as unknown as ModelRouteRequest<unknown>,
         ctx,
       ),
-    ).rejects.toThrow(/chain exhausted/i);
+    ).rejects.toThrow(/already exhausted/i);
   });
 });

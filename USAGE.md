@@ -120,12 +120,16 @@ from the environment.
 {
   "virtual": { "provider": "jev", "id": "auto", "name": "Auto (Jev Pro)" },
   "dormancy": true,
+  "detectLegacyProfile": true,
   "profilesPath": "/absolute/path/to/profiles.json",
   "faultInjection": { "firstTransient": "429", "onRequest": 1, "mode": "throw" }
 }
 ```
 
-All optional; defaults give `jev/auto`, auto-select enabled, no injection.
+All optional; defaults give `jev/auto`, auto-select enabled, legacy profile detection on, and no
+injection. `dormancy: false` never auto-selects at session start (fully detached until
+`/jev auto`); `detectLegacyProfile: false` skips legacy-config profile detection and the
+implicit `default` import.
 
 ## Troubleshooting
 

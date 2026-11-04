@@ -129,6 +129,34 @@ describe("legacy import (R9.1)", () => {
       await rm(dir, { recursive: true, force: true });
     }
   });
+
+  it("starts detached when detectLegacyProfile is false", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "detached-test-"));
+    try {
+      const profilesPath = join(dir, "profiles.json");
+      const legacyPath = join(dir, "pi-jev-model-router.json");
+      const statePath = join(dir, "state.json");
+      await writeFile(profilesPath, JSON.stringify(PROFILES, null, 2), "utf8");
+      await writeFile(legacyPath, JSON.stringify({ useDefaultModels: false, routes: PROFILES.google.routes }), "utf8");
+
+      const detached = new ProRouterRuntime(
+        { profilesPath, legacyRouterConfigPath: legacyPath, statePath },
+        { detectLegacyProfile: false },
+      );
+      await detached.initialize();
+      // No implicit import, no legacy match: routing stays on built-in defaults
+      // until an explicit /jev profile switch.
+      expect(detached.getActiveProfileName()).toBeUndefined();
+      expect(detached.getProfile("default")).toBeUndefined();
+      expect(detached.config.routes.quick[0].provider).toBe("openrouter"); // built-ins
+
+      // An explicit switch still works and persists.
+      await detached.switchProfile("zai");
+      expect((await loadProState(statePath)).activeProfile).toBe("zai");
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("parking persistence across sessions (R5.1)", () => {

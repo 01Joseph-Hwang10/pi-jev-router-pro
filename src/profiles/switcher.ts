@@ -131,7 +131,7 @@ export class ProRouterRuntime {
     );
 
     // R9.1: legacy router config as an implicit `default` profile on first run.
-    if (legacyConfig && Object.keys(this.profiles).length === 0) {
+    if (legacyConfig && Object.keys(this.profiles).length === 0 && this.proConfig.detectLegacyProfile !== false) {
       this.implicit = { default: implicitProfileFromLegacyConfig(legacyConfig) };
     }
 
@@ -140,6 +140,10 @@ export class ProRouterRuntime {
   }
 
   private detectActiveProfile(legacyConfig: Record<string, unknown> | undefined): string | undefined {
+    // Detached mode (pro config): no legacy-based detection at all.
+    if (this.proConfig.detectLegacyProfile === false) {
+      return this.state.activeProfile && this.state.activeProfile in this.allProfiles() ? this.state.activeProfile : undefined;
+    }
     // 1. The pro state file wins.
     if (this.state.activeProfile && this.state.activeProfile in this.allProfiles()) {
       return this.state.activeProfile;
