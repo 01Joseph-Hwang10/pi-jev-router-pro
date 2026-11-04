@@ -1,0 +1,56 @@
+{
+  "name": "pi-jev-router-pro",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Single-surface TypeSafe Jev model router for the Pi coding agent: one virtual model (jev/auto) with judgment routing, mid-turn transient fallback, permanent-failure parking, and first-class routing profiles.",
+  "license": "MIT",
+  "author": "Joseph Hwang",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "pi",
+    "jev",
+    "virtual-model",
+    "model-router",
+    "routing",
+    "fallback",
+    "profile-switcher",
+    "account-switcher"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/01Joseph-Hwang10/pi-jev-router-pro.git"
+  },
+  "bugs": {
+    "url": "https://github.com/01Joseph-Hwang10/pi-jev-router-pro/issues"
+  },
+  "homepage": "https://github.com/01Joseph-Hwang10/pi-jev-router-pro#readme",
+  "files": [
+    "src",
+    "README.md",
+    "USAGE.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": ">=1.4.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "1.4.0",
+    "@earendil-works/pi-ai": "1.4.0",
+    "@earendil-works/pi-tui": "1.4.0",
+    "@types/node": "^22.13.9",
+    "typebox": "1.3.27",
+    "typescript": "^5.8.2",
+    "vitest": "^2.1.8"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  }
+}
