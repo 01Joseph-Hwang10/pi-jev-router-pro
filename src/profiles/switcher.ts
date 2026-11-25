@@ -12,7 +12,7 @@ import {
   getProfileSummary,
   extractProvidersFromProfile,
 } from "./store.js";
-import { loadProState, saveActiveProfileName, saveProState } from "./state.js";
+import { loadProState, saveActiveProfileName, mergeAndSaveState } from "./state.js";
 
 /**
  * The pro router runtime's data plane (design §1 `profiles/switcher.ts`).
@@ -158,9 +158,26 @@ export class ProRouterRuntime {
     return undefined;
   }
 
+  /** Serializes this runtime's persists; each one merges what the last one wrote. */
+  private persistChain: Promise<void> = Promise.resolve();
+
+  /**
+   * Persist the runtime state with merge-before-write (change 003): re-read
+   * the on-disk state and merge it with the in-memory snapshot before writing,
+   * so concurrent sessions — several on this machine or across synced
+   * machines — never blind-overwrite each other's ledger spend, parks, or a
+   * newer profile switch. The in-memory snapshot itself is not adopted from
+   * disk; a session's own view still changes only via explicit switches or a
+   * reload. Serialized per runtime and best-effort: a failed persist never
+   * breaks routing.
+   */
   async persistState(): Promise<void> {
+    const run = this.persistChain.then(() =>
+      mergeAndSaveState(this.options.statePath, { ...this.state, ledger: this.ledger }).then(() => undefined),
+    );
+    this.persistChain = run.catch(() => undefined);
     try {
-      await saveProState(this.options.statePath, { ...this.state, ledger: this.ledger });
+      await run;
     } catch {
       // Best-effort: routing must never break because state could not be saved.
     }

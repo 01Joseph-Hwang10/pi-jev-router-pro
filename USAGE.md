@@ -53,7 +53,9 @@ profile. No legacy config rewrite, no reload.
 If the state file syncs across machines (e.g. Syncthing), concurrent writes leave
 `*.sync-conflict-*` copies behind. On startup the extension merges every conflict copy into the
 state file — spend ledgers by max per model (never over-reports spend), parks unioned, newest
-profile switch wins — then deletes the copies, so no spend data is lost to a sync race.
+profile switch wins — then deletes the copies, so no spend data is lost to a sync race. Every
+persist also re-reads and merges the on-disk state before writing (atomically, temp+rename), so
+several simultaneous sessions keep each other's spend, parks, and the newest profile switch.
 
 ### CRUD
 

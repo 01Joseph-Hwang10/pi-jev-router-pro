@@ -1,4 +1,5 @@
-import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, rm, unlink, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { basename, dirname, extname, join } from "node:path";
 import type { LedgerData, ParkEntry, ProState } from "../domain/types.js";
 import { round4 } from "../routing/budget.js";
@@ -46,12 +47,22 @@ function sanitizeParks(parks: unknown): ParkEntry[] {
 }
 
 export async function saveProState(statePath: string, state: ProState): Promise<void> {
+  // Atomic temp+rename (same pattern as fileParking): a concurrent merge-read
+  // never observes a half-written file — merge-before-write depends on it.
+  const temp = `${statePath}.${randomUUID()}.tmp`;
   try {
     await mkdir(dirname(statePath), { recursive: true });
     const content = `${JSON.stringify({ ...state, version: 1 }, null, 2)}\n`;
-    await writeFile(statePath, content, "utf8");
+    await writeFile(temp, content, { encoding: "utf8", mode: 0o600 });
+    await rename(temp, statePath);
   } catch (error) {
     throw new Error(`Failed to save pro state at ${statePath}: ${formatError(error)}`);
+  } finally {
+    try {
+      await rm(temp, { force: true });
+    } catch {
+      /* Best-effort cleanup. */
+    }
   }
 }
 
@@ -117,11 +128,17 @@ export async function reconcileSyncConflictCopies(statePath: string, state: ProS
 }
 
 function mergeProStates(base: ProState, other: ProState): ProState {
-  const otherSwitchedLater = switchTime(other.lastSwitchedAt) > switchTime(base.lastSwitchedAt);
+  const baseTime = switchTime(base.lastSwitchedAt);
+  const otherTime = switchTime(other.lastSwitchedAt);
+  // Newest switch wins; on a tie (e.g. both timestamps missing), a defined
+  // profile beats an unset one so an empty or corrupt disk state cannot erase
+  // an incoming switch.
+  const otherWins =
+    otherTime > baseTime || (otherTime === baseTime && base.activeProfile === undefined && other.activeProfile !== undefined);
   return {
     version: 1,
-    activeProfile: otherSwitchedLater ? other.activeProfile : base.activeProfile,
-    lastSwitchedAt: otherSwitchedLater ? other.lastSwitchedAt : base.lastSwitchedAt,
+    activeProfile: otherWins ? other.activeProfile : base.activeProfile,
+    lastSwitchedAt: otherWins ? other.lastSwitchedAt : base.lastSwitchedAt,
     parks: mergeParks(base.parks, other.parks),
     ledger: mergeLedgers(base.ledger, other.ledger),
   };
@@ -181,12 +198,36 @@ function mergeLedgers(base: LedgerData | undefined, other: LedgerData | undefine
   };
 }
 
+/**
+ * Read-merge-write persist (change 003): merge `incoming` into whatever is on
+ * disk right now — never blind-overwrite — then atomically persist the union.
+ * Several pi sessions (on one machine or across synced machines) can thus
+ * persist concurrently while keeping each other's ledger spend, parks, and the
+ * newest profile switch. A missing or corrupt on-disk file degrades to "disk
+ * is empty", so `incoming` still persists. Returns the merged state written.
+ */
+export async function mergeAndSaveState(statePath: string, incoming: ProState): Promise<ProState> {
+  let disk: ProState = { version: 1, parks: [] };
+  try {
+    disk = sanitizeProState(JSON.parse(await readFile(statePath, "utf8")) as Partial<ProState>);
+  } catch {
+    /* Missing or unreadable: incoming owns the file. */
+  }
+  const merged = mergeProStates(disk, incoming);
+  await saveProState(statePath, merged);
+  return merged;
+}
+
 export async function saveActiveProfileName(activeProfile: string | undefined, statePath: string, previous: ProState): Promise<ProState> {
+  // A switch owns the profile fields, not the ledger: the incoming state
+  // carries no ledger, so the merged write keeps whatever concurrent sessions
+  // persisted since `previous` was loaded. `lastSwitchedAt` is stamped now for
+  // clears too, so a clear is not reverted by an older on-disk switch.
   const next: ProState = {
     ...previous,
+    ledger: undefined,
     activeProfile,
-    lastSwitchedAt: activeProfile ? new Date().toISOString() : previous.lastSwitchedAt,
+    lastSwitchedAt: new Date().toISOString(),
   };
-  await saveProState(statePath, next);
-  return next;
+  return await mergeAndSaveState(statePath, next);
 }

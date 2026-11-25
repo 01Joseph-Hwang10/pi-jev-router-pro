@@ -6,6 +6,7 @@ import { ProRouterRuntime } from "../src/profiles/switcher.js";
 import { loadProState } from "../src/profiles/state.js";
 import { detectLegacyRouter } from "../src/storage/paths.js";
 import { effectiveConfig } from "../src/jev/config.js";
+import { dayKey, recordCost } from "../src/routing/budget.js";
 
 /**
  * R8.2: switching is memory + pro state only — the legacy router config is
@@ -201,5 +202,71 @@ describe("env knobs (R9.2, R9.3)", () => {
     ]);
     expect(detectLegacyRouter({ packages: ["npm:pi-scroll"] })).toEqual([]);
     expect(detectLegacyRouter({})).toEqual([]);
+  });
+});
+
+describe("merge-before-write persistence (change 003)", () => {
+  let dir: string;
+  let profilesPath: string;
+  let legacyPath: string;
+  let statePath: string;
+
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), "merge-persist-test-"));
+    profilesPath = join(dir, "profiles.json");
+    legacyPath = join(dir, "pi-jev-model-router.json");
+    statePath = join(dir, "pi-jev-router-pro-state.json");
+    await writeFile(profilesPath, JSON.stringify(PROFILES, null, 2), "utf8");
+  });
+
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  async function newRuntime(): Promise<ProRouterRuntime> {
+    const runtime = new ProRouterRuntime({ profilesPath, legacyRouterConfigPath: legacyPath, statePath });
+    await runtime.initialize();
+    return runtime;
+  }
+
+  it("a session that started before another session's persist keeps its spend", async () => {
+    const a = await newRuntime();
+    const b = await newRuntime(); // b loaded before a persisted: its ledger lacks a's spend
+
+    recordCost(a.ledger, "zai/glm-5.3", 1.5);
+    await a.persistState();
+    recordCost(b.ledger, "google/gemini-3.8-flash", 2);
+    await b.persistState(); // a blind write here would drop a's spend
+
+    const state = await loadProState(statePath);
+    const day = state.ledger?.days[dayKey()];
+    expect(day?.byModel["zai/glm-5.3"]).toBe(1.5);
+    expect(day?.byModel["google/gemini-3.8-flash"]).toBe(2);
+    expect(day?.total).toBe(3.5);
+  });
+
+  it("a stale session's persist does not revert another session's switch", async () => {
+    const a = await newRuntime();
+    const b = await newRuntime(); // b still has no active profile in memory
+
+    await a.switchProfile("zai");
+    await b.persistState(); // b's stale snapshot must not resurrect the old state
+
+    expect((await loadProState(statePath)).activeProfile).toBe("zai");
+    expect((await newRuntime()).getActiveProfileName()).toBe("zai");
+  });
+
+  it("serializes this runtime's overlapping persists", async () => {
+    const a = await newRuntime();
+
+    recordCost(a.ledger, "zai/glm-5.3", 1);
+    const first = a.persistState();
+    recordCost(a.ledger, "zai/glm-5.3", 2); // ledger now holds 3 while first persists
+    const second = a.persistState();
+    await Promise.all([first, second]);
+
+    const state = await loadProState(statePath);
+    // The queued persist merged the first persist's write with the newer memory.
+    expect(state.ledger?.days[dayKey()]?.byModel["zai/glm-5.3"]).toBe(3);
   });
 });

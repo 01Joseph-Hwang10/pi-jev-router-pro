@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { mkdtemp, rm, readFile, writeFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadProState, saveProState } from "../src/profiles/state.js";
+import { loadProState, saveProState, saveActiveProfileName, mergeAndSaveState } from "../src/profiles/state.js";
 import type { LedgerData, ProState } from "../src/domain/types.js";
 
 /** Self-healing merge of Syncthing conflict copies of the pro state file. */
@@ -123,5 +123,66 @@ describe("loadProState sync-conflict healing", () => {
       "other.json.sync-conflict-20261119-150311-ADY4Y6L.json",
       "pi-jev-router-pro-state.json",
     ]);
+  });
+});
+
+describe("mergeAndSaveState (change 003)", () => {
+  let dir: string;
+  let statePath: string;
+
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), "merge-save-test-"));
+    statePath = join(dir, "pi-jev-router-pro-state.json");
+  });
+
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it("keeps the on-disk spend and the newer on-disk switch", async () => {
+    await saveProState(statePath, stateWith({
+      activeProfile: "zai",
+      lastSwitchedAt: "2026-11-19T15:03:11.000Z",
+      ledger: ledgerWith({ "2026-11-19": { total: 5, byModel: { "zai/glm-5.3": 5 } } }, { requests: 9, inputTokens: 1, outputTokens: 2 }),
+    }));
+    const incoming = stateWith({
+      activeProfile: "stale",
+      lastSwitchedAt: "2026-11-17T05:05:12.851Z",
+      ledger: ledgerWith({ "2026-11-23": { total: 3, byModel: { "google/gemini": 3 } } }, { requests: 4, inputTokens: 0, outputTokens: 0 }),
+    });
+
+    const merged = await mergeAndSaveState(statePath, incoming);
+
+    expect(merged.activeProfile).toBe("zai");
+    expect(merged.ledger?.days["2026-11-19"]?.total).toBe(5);
+    expect(merged.ledger?.days["2026-11-23"]?.total).toBe(3);
+    expect(merged.ledger?.jev.requests).toBe(9);
+    expect((await loadProState(statePath)).ledger?.days["2026-11-23"]?.total).toBe(3);
+  });
+
+  it("treats a missing or corrupt file as empty and leaves no .tmp siblings", async () => {
+    await writeFile(statePath, "{ corrupt", "utf8");
+    const incoming = stateWith({
+      activeProfile: "zai",
+      ledger: ledgerWith({ "2026-11-23": { total: 3, byModel: { "google/gemini": 3 } } }, { requests: 1, inputTokens: 0, outputTokens: 0 }),
+    });
+
+    const merged = await mergeAndSaveState(statePath, incoming);
+
+    expect(merged.activeProfile).toBe("zai");
+    expect(merged.ledger?.days["2026-11-23"]?.total).toBe(3);
+    expect((await readdir(dir)).filter((name) => name.includes(".tmp"))).toEqual([]);
+  });
+
+  it("saveActiveProfileName preserves the on-disk ledger and stamps the switch", async () => {
+    await saveProState(statePath, stateWith({
+      ledger: ledgerWith({ "2026-11-19": { total: 5, byModel: { "zai/glm-5.3": 5 } } }, { requests: 1, inputTokens: 0, outputTokens: 0 }),
+    }));
+
+    const next = await saveActiveProfileName("zai", statePath, { version: 1, parks: [] });
+
+    expect(next.activeProfile).toBe("zai");
+    expect(next.lastSwitchedAt).toBeTruthy();
+    expect(next.ledger?.days["2026-11-19"]?.total).toBe(5);
   });
 });
