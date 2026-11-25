@@ -50,6 +50,11 @@ judged tier (`priority` desc) → the tier's chain → adjacent tiers nearest-fi
 active profile name to `pi-jev-router-pro-state.json`. The next request dispatches from the new
 profile. No legacy config rewrite, no reload.
 
+If the state file syncs across machines (e.g. Syncthing), concurrent writes leave
+`*.sync-conflict-*` copies behind. On startup the extension merges every conflict copy into the
+state file — spend ledgers by max per model (never over-reports spend), parks unioned, newest
+profile switch wins — then deletes the copies, so no spend data is lost to a sync race.
+
 ### CRUD
 
 - `/jev profile add [name]` — capture the active profile, copy an existing one, or write JSON
